@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>IceHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --saving:#ee7384;
+  --coffee:#d79c7d;
+  --earning:#005878;
+  --logo:#67d4cf;
+  --neutral:#c9c7b5;
+  --ink:#292743;
+  --line:#9b9b9b;
+}
+html,body{min-height:100%;background:#fff}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;color:var(--ink)}
+button,input{font:inherit}
+button,a{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+.app{
+  width:min(100%,390px);
+  min-height:100svh;
+  margin:0 auto;
+  padding:clamp(58px,calc(8vh + 24px),76px) 38px 42px;
+  position:relative;
+  overflow:hidden;
+}
+.page{display:none}
+.page.active{display:block}
+.home-header,.tool-header{display:flex;justify-content:space-between;align-items:flex-start;position:relative}
+.date-logo-group{display:flex;align-items:flex-end;gap:18px}
+.date-stack{font-family:Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif;font-size:56px;line-height:.92;font-weight:400;color:var(--ink)}
+.logo{display:inline-flex;align-items:center;justify-content:center;align-self:flex-end;height:103px;background:var(--logo);color:#fff;font-family:"Andale Mono","Courier New",monospace;font-size:39px;line-height:1;font-weight:700;padding:0 11px}
+.logo span{text-align:center}
+.top-dot{width:36px;height:36px;border:0;border-radius:50%;display:block;flex:0 0 auto;margin-top:3px}
+.neutral-dot{background:var(--neutral)}
+.saving-bg{background:var(--saving)}
+.coffee-bg{background:var(--coffee)}
+.earning-bg{background:var(--earning)}
+.divider{height:1.5px;background:var(--line);margin:42px 0 52px}
+.home-menu{display:flex;flex-direction:column;gap:68px;margin-top:78px}
+.home-item{display:flex;align-items:center;gap:27px;text-decoration:none;border:0;background:transparent;text-align:left}
+.menu-dot,.title-dot{width:43px;height:43px;border-radius:50%;flex:0 0 auto}
+.menu-name,.title-text{font-family:"Baloo 2",cursive;font-size:24px;line-height:1;font-weight:500;letter-spacing:9px}
+.saving-text{color:var(--saving)}
+.coffee-text{color:var(--coffee)}
+.earning-text{color:var(--earning)}
+.data-menu,.submenu{position:absolute;top:48px;right:0;width:150px;padding:8px;border:1px solid rgba(41,39,67,.12);border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 12px 36px rgba(41,39,67,.14);backdrop-filter:blur(18px);z-index:10}
+.submenu{top:48px;right:158px;width:178px}
+.data-menu button,.submenu button{width:100%;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:10px;color:var(--ink);font-family:"Baloo 2",cursive;font-size:17px}
+.data-menu button:hover,.submenu button:hover{background:#f3f3f1}
+.tool-header{display:block}
+.tool-page .divider{margin:0 0 58px}
+.tool-title{display:flex;flex-direction:column;align-items:flex-start;gap:26px}
+.tool-title .home-button{margin:0;width:43px;height:43px}
+.tool-content{display:flex;flex-direction:column;gap:24px;margin-top:64px}
+.input-card{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:58px;padding:10px 16px 10px 18px;border:2px solid #9b9b9b;border-radius:18px;color:#9b9b9b;font-family:"SF Hello","PingFang SC","Hiragino Sans GB",sans-serif;font-size:17px;font-weight:300}
+.saving-input,.coffee-input,.earning-input{color:#9b9b9b}
+.input-card input{width:45%;border:0;outline:0;background:transparent;color:var(--ink);font-size:21px;font-weight:300;font-family:"SF Hello","PingFang SC","Hiragino Sans GB",sans-serif;text-align:right}
+.input-card input::placeholder{color:rgba(41,39,67,.22)}
+.result-grid{display:grid;grid-template-columns:max-content max-content;justify-content:center;column-gap:22px;row-gap:17px;margin-top:22px;font-size:15px;line-height:1.35}
+.result-label{text-align:right;white-space:nowrap}
+.result-value{text-align:left;white-space:nowrap;font-weight:600}
+.result-grid,.empty-note,.helper-text{font-family:"SF Hello","PingFang SC","Hiragino Sans GB",sans-serif;font-weight:300}
+.result-value{font-weight:300}
+.single-result{margin-top:30px}
+.empty-note,.helper-text{margin-top:6px;text-align:center;color:rgba(41,39,67,.48);font-size:13px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:calc(100% - 48px);padding:10px 16px;border-radius:999px;background:rgba(41,39,67,.92);color:#fff;font-size:14px;white-space:nowrap;z-index:30}
+[hidden]{display:none!important}
+@media (max-height:700px){.app{padding-top:28px}.divider{margin:32px 0 38px}.home-menu{gap:44px}.tool-page .divider{margin:30px 0 34px}}
+@media (max-width:350px){.app{padding-left:28px;padding-right:28px}.date-stack{font-size:50px}.logo{font-size:27px}.menu-name,.title-text{font-size:22px;letter-spacing:7px}.result-grid{column-gap:15px;font-size:14px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="page active" id="homePage">
+    <header class="home-header">
+      <div class="date-logo-group">
+        <div class="date-stack" id="todayDate"></div>
+        <div class="logo"><span>ice<br>hub</span></div>
+      </div>
+      <button class="top-dot neutral-dot" id="dataMenuButton" aria-label="Import or export data"></button>
+      <div class="data-menu" id="dataMenu" hidden>
+        <button data-action="import">import</button>
+        <button data-action="export">export</button>
+      </div>
+      <div class="submenu" id="importMenu" hidden>
+        <button data-import="salary">salary dates</button>
+        <button data-import="earning">youtube earnings</button>
+      </div>
+      <div class="submenu" id="exportMenu" hidden>
+        <button data-export="saving">saving</button>
+        <button data-export="earning">youtube earnings</button>
+      </div>
+      <input type="file" id="salaryFile" accept=".csv,text/csv" hidden>
+      <input type="file" id="earningFile" accept=".csv,text/csv" hidden>
+    </header>
+    <div class="divider"></div>
+    <nav class="home-menu">
+      <button class="home-item" data-page="savingPage"><span class="menu-dot saving-bg"></span><span class="menu-name saving-text">saving</span></button>
+      <button class="home-item" data-page="coffeePage"><span class="menu-dot coffee-bg"></span><span class="menu-name coffee-text">coffee</span></button>
+      <button class="home-item" data-page="earningPage"><span class="menu-dot earning-bg"></span><span class="menu-name earning-text">earning</span></button>
+    </nav>
+  </section>
+
+  <section class="page tool-page" id="savingPage">
+    <header class="tool-header">
+      <div class="divider"></div>
+      <div class="tool-title">
+        <button class="title-dot saving-bg home-button" aria-label="Back to home"></button>
+        <span class="title-text saving-text">saving</span>
+      </div>
+    </header>
+    <section class="tool-content">
+      <label class="input-card saving-input"><span>可支配余额</span><input id="balanceInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
+      <div class="result-grid" id="savingResults" hidden>
+        <div class="result-label">下一个工资日</div><div class="result-value" id="nextSalaryDate"></div>
+        <div class="result-label">距离工资日还有</div><div class="result-value" id="daysLeft"></div>
+        <div class="result-label">每天可支配</div><div class="result-value" id="dailyBudget"></div>
+        <div class="result-label" id="spentLabel">过去 0 天已花费</div><div class="result-value" id="spentAmount"></div>
+      </div>
+      <p class="empty-note" id="salaryNotice" hidden>请先在首页导入工资日 CSV</p>
+    </section>
+  </section>
+
+  <section class="page tool-page" id="coffeePage">
+    <header class="tool-header">
+      <div class="divider"></div>
+      <div class="tool-title">
+        <button class="title-dot coffee-bg home-button" aria-label="Back to home"></button>
+        <span class="title-text coffee-text">coffee</span>
+      </div>
+    </header>
+    <section class="tool-content">
+      <label class="input-card coffee-input"><span>剩余（g）</span><input id="remainingInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
+      <label class="input-card coffee-input"><span>每日（g）</span><input id="dailyInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
+      <div class="result-grid single-result" id="coffeeResult" hidden><div class="result-label">还能喝</div><div class="result-value"><span id="daysCanDrink"></span> 天</div></div>
+    </section>
+  </section>
+
+  <section class="page tool-page" id="earningPage">
+    <header class="tool-header">
+      <div class="divider"></div>
+      <div class="tool-title">
+        <button class="title-dot earning-bg home-button" aria-label="Back to home"></button>
+        <span class="title-text earning-text">earning</span>
+      </div>
+    </header>
+    <section class="tool-content">
+      <label class="input-card earning-input"><span>金额</span><input id="earningInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
+      <div class="result-grid single-result">
+        <div class="result-label">宇多收入共</div>
+        <div class="result-value"><span id="earningTotal">0.00</span> USD</div>
+        <div class="result-label">上一笔收入</div>
+        <div class="result-value" id="lastEarning">—</div>
+      </div>
+    </section>
+  </section>
+
+  <div class="toast" id="toast" hidden></div>
+</main>
+<script>
+const KEYS={saving:"icehub.saving",earning:"icehub.earning",salaryDates:"icehub.salaryDates"};
+const read=(key,fallback=[])=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
+const write=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
+const pad2=value=>String(value).padStart(2,"0");
+const formatDate=date=>`${date.getFullYear()}/${pad2(date.getMonth()+1)}/${pad2(date.getDate())}`;
+const todayString=()=>formatDate(new Date());
+function parseDate(value){const m=String(value).trim().match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);if(!m)return null;const d=new Date(+m[1],+m[2]-1,+m[3]);return d.getFullYear()===+m[1]&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null}
+function daysBetween(from,to){const a=new Date(from.getFullYear(),from.getMonth(),from.getDate());const b=new Date(to.getFullYear(),to.getMonth(),to.getDate());return Math.round((b-a)/86400000)}
+const money=value=>Number(value).toFixed(2);
+function parseCSV(text){return text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(line=>line.trim()).map(line=>{const out=[];let current="",quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(quoted&&line[i+1]==='"'){current+='"';i++}else quoted=!quoted}else if(c===","&&!quoted){out.push(current.trim());current=""}else current+=c}out.push(current.trim());return out})}
+function downloadCSV(filename,headers,rows){const esc=value=>/[",\n]/.test(String(value))?`"${String(value).replace(/"/g,'""')}"`:String(value);const content="\uFEFF"+[headers,...rows].map(row=>row.map(esc).join(",")).join("\n");const blob=new Blob([content],{type:"text/csv;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
+
+const pages=[...document.querySelectorAll(".page")];
+
+function renderPage(id){
+  pages.forEach(page=>page.classList.toggle("active",page.id===id));
+  hideMenus();
+  if(id==="savingPage")renderSaving();
+  if(id==="earningPage")renderEarningTotal();
+  window.scrollTo(0,0);
+}
+
+function showPage(id,{push=true}={}){
+  renderPage(id);
+  if(push){
+    history.pushState({icehubPage:id},"",id==="homePage"?"#home":`#${id.replace("Page","")}`);
+  }
+}
+
+history.replaceState({icehubPage:"homePage"},"","#home");
+
+document.querySelectorAll("[data-page]").forEach(button=>
+  button.addEventListener("click",()=>showPage(button.dataset.page))
+);
+
+document.querySelectorAll(".home-button").forEach(button=>
+  button.addEventListener("click",()=>{
+    if(history.state?.icehubPage&&history.state.icehubPage!=="homePage"){
+      history.back();
+    }else{
+      showPage("homePage",{push:false});
+    }
+  })
+);
+
+window.addEventListener("popstate",event=>{
+  renderPage(event.state?.icehubPage||"homePage");
+});
+
+const now=new Date();
+document.getElementById("todayDate").innerHTML=`${String(now.getFullYear()).slice(-2)}<br>${pad2(now.getMonth()+1)}<br>${pad2(now.getDate())}`;
+
+const dataMenu=document.getElementById("dataMenu"),importMenu=document.getElementById("importMenu"),exportMenu=document.getElementById("exportMenu"),toast=document.getElementById("toast");
+function hideMenus(){dataMenu.hidden=true;importMenu.hidden=true;exportMenu.hidden=true}
+function showToast(message){toast.textContent=message;toast.hidden=false;clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.hidden=true,2200)}
+document.getElementById("dataMenuButton").addEventListener("click",event=>{event.stopPropagation();const open=dataMenu.hidden;hideMenus();dataMenu.hidden=!open});
+dataMenu.addEventListener("click",event=>{const action=event.target.dataset.action;if(!action)return;importMenu.hidden=action!=="import";exportMenu.hidden=action!=="export"});
+document.addEventListener("click",event=>{if(!event.target.closest(".data-menu")&&!event.target.closest(".submenu")&&!event.target.closest("#dataMenuButton"))hideMenus()});
+
+const salaryFile=document.getElementById("salaryFile"),earningFile=document.getElementById("earningFile");
+importMenu.addEventListener("click",event=>{if(event.target.dataset.import==="salary")salaryFile.click();if(event.target.dataset.import==="earning")earningFile.click()});
+exportMenu.addEventListener("click",event=>{const type=event.target.dataset.export;if(type==="saving"){const rows=read(KEYS.saving,[]).sort((a,b)=>a.date.localeCompare(b.date)).map(item=>[item.date,item.balance]);if(!rows.length)return showToast("还没有 Saving 数据");downloadCSV("Saving.csv",["Date","Balance"],rows)}if(type==="earning"){const rows=read(KEYS.earning,[]).sort((a,b)=>a.date.localeCompare(b.date)).map(item=>[item.date,`$${money(item.amount)}`]);if(!rows.length)return showToast("还没有 YouTube Earnings 数据");downloadCSV("YouTube Earnings.csv",["Date","Amount"],rows)}hideMenus()});
+salaryFile.addEventListener("change",async()=>{
+  const file=salaryFile.files[0];
+  if(!file)return;
+
+  const rows=parseCSV(await file.text());
+  const dates=rows.slice(1).map(row=>parseDate(row[0])).filter(Boolean).map(formatDate);
+  const unique=[...new Set(dates)].sort();
+  if(!unique.length)return showToast("没有找到有效工资日");
+  write(KEYS.salaryDates,unique);
+  showToast(`已导入 ${unique.length} 个工资日`);
+  salaryFile.value="";
+  hideMenus();
+});
+earningFile.addEventListener("change",async()=>{
+  const file=earningFile.files[0];
+  if(!file)return;
+
+  const rows=parseCSV(await file.text());
+  const imported=[];
+  for(const row of rows.slice(1)){
+    const date=parseDate(row[0]);
+    const amount=Number(String(row[1]).replace(/[$,\s]/g,""));
+    if(date&&Number.isFinite(amount)&&amount>=0){
+      imported.push({
+        id:`${Date.now()}-${Math.random()}`,
+        date:formatDate(date),
+        amount:Number(amount.toFixed(2))
+      });
+    }
+  }
+
+  if(!imported.length)return showToast("没有找到有效收入记录");
+  write(KEYS.earning,[...read(KEYS.earning,[]),...imported]);
+  showToast(`已导入 ${imported.length} 条收入`);
+  earningFile.value="";
+  hideMenus();
+  renderEarningTotal();
+});
+
+const balanceInput=document.getElementById("balanceInput"),savingResults=document.getElementById("savingResults"),salaryNotice=document.getElementById("salaryNotice"),nextSalaryDate=document.getElementById("nextSalaryDate"),daysLeft=document.getElementById("daysLeft"),dailyBudget=document.getElementById("dailyBudget"),spentLabel=document.getElementById("spentLabel"),spentAmount=document.getElementById("spentAmount");
+function renderSaving(){const value=Number(balanceInput.value);if(balanceInput.value===""||!Number.isFinite(value)||value<0){savingResults.hidden=true;salaryNotice.hidden=true;return}const salaryDates=read(KEYS.salaryDates,[]);const today=new Date();const next=salaryDates.find(s=>{const d=parseDate(s);return d&&daysBetween(today,d)>=0});if(!next){savingResults.hidden=true;salaryNotice.hidden=false;return}salaryNotice.hidden=true;const nextDate=parseDate(next);const remaining=daysBetween(today,nextDate);nextSalaryDate.textContent=next;daysLeft.textContent=String(remaining);dailyBudget.textContent=remaining>0?money(value/remaining):"—";const previous=read(KEYS.saving,[]).filter(item=>item.date<todayString()).sort((a,b)=>b.date.localeCompare(a.date))[0];if(previous){const elapsed=daysBetween(parseDate(previous.date),today);spentLabel.textContent=`过去 ${elapsed} 天已花费`;spentAmount.textContent=money(Number(previous.balance)-value);spentLabel.hidden=false;spentAmount.hidden=false}else{spentLabel.hidden=true;spentAmount.hidden=true}savingResults.hidden=false}
+function saveSaving(){const value=Number(balanceInput.value);if(balanceInput.value===""||!Number.isFinite(value)||value<0)return;const today=todayString();const records=read(KEYS.saving,[]);const index=records.findIndex(item=>item.date===today);const record={date:today,balance:Number(value.toFixed(2))};if(index>=0)records[index]=record;else records.push(record);records.sort((a,b)=>a.date.localeCompare(b.date));write(KEYS.saving,records);renderSaving()}
+const todayRecord=read(KEYS.saving,[]).find(item=>item.date===todayString());if(todayRecord)balanceInput.value=todayRecord.balance;
+balanceInput.addEventListener("input",renderSaving);balanceInput.addEventListener("change",saveSaving);balanceInput.addEventListener("keydown",event=>{if(event.key==="Enter")balanceInput.blur()});
+
+const remainingInput=document.getElementById("remainingInput"),dailyInput=document.getElementById("dailyInput"),coffeeResult=document.getElementById("coffeeResult"),daysCanDrink=document.getElementById("daysCanDrink");
+function calculateCoffee(){const remaining=Number(remainingInput.value),daily=Number(dailyInput.value);if(remainingInput.value===""||dailyInput.value===""||!Number.isFinite(remaining)||!Number.isFinite(daily)||remaining<0||daily<=0){coffeeResult.hidden=true;return}daysCanDrink.textContent=String(Math.round(remaining/daily));coffeeResult.hidden=false}
+remainingInput.addEventListener("input",calculateCoffee);dailyInput.addEventListener("input",calculateCoffee);
+
+const earningInput=document.getElementById("earningInput"),earningTotal=document.getElementById("earningTotal");
+function renderEarningTotal(){
+  const records=read(KEYS.earning,[]);
+  earningTotal.textContent=money(records.reduce((sum,item)=>sum+Number(item.amount||0),0));
+
+  const last=document.getElementById("lastEarning");
+  if(!last) return;
+
+  if(records.length===0){
+    last.textContent="—";
+    return;
+  }
+
+  const latest=[...records].sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const [y,m,d]=latest.date.split("/");
+  last.textContent=`${m}/${d}    ${money(latest.amount)} USD`;
+}
+function saveEarning(){const amount=Number(earningInput.value);if(earningInput.value===""||!Number.isFinite(amount)||amount<=0)return;const records=read(KEYS.earning,[]);records.push({id:`${Date.now()}-${Math.random()}`,date:todayString(),amount:Number(amount.toFixed(2))});write(KEYS.earning,records);earningInput.value="";renderEarningTotal()}
+earningInput.addEventListener("change",saveEarning);earningInput.addEventListener("keydown",event=>{if(event.key==="Enter")earningInput.blur()});
+
+renderSaving();
+renderEarningTotal();
+</script>
+</body>
+</html>
