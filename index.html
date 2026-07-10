@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IceHub">
+<meta name="theme-color" content="#ffffff">
 <title>IceHub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,11 +81,61 @@ button{cursor:pointer}
 .empty-note,.helper-text{margin-top:6px;text-align:center;color:rgba(41,39,67,.48);font-size:13px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:calc(100% - 48px);padding:10px 16px;border-radius:999px;background:rgba(41,39,67,.92);color:#fff;font-size:14px;white-space:nowrap;z-index:30}
 [hidden]{display:none!important}
+.splash-screen{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  opacity:1;
+  visibility:visible;
+  transition:opacity .45s ease,visibility .45s ease;
+}
+.splash-screen.is-hidden{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.splash-logo{
+  width:86px;
+  height:86px;
+  border-radius:13px;
+  background:var(--logo);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-family:"Helvetica Neue",Arial,sans-serif;
+  line-height:.86;
+}
+.splash-logo strong{
+  font-size:35px;
+  font-weight:700;
+  letter-spacing:-1px;
+}
+.splash-logo span{
+  margin-top:5px;
+  font-size:24px;
+  font-weight:200;
+  letter-spacing:-1px;
+}
+@media (prefers-reduced-motion:reduce){
+  .splash-screen{transition:none}
+}
 @media (max-height:700px){.divider{margin:32px 0 38px}.home-menu{gap:44px}.tool-page .divider{margin:30px 0 34px}}
 @media (max-width:350px){.app{padding-left:28px;padding-right:28px}.date-stack{font-size:50px}.logo{font-size:27px}.menu-name,.title-text{font-size:22px;letter-spacing:7px}.result-grid{column-gap:15px;font-size:14px}}
 </style>
 </head>
 <body>
+<div class="splash-screen" id="splashScreen" aria-hidden="true">
+  <div class="splash-logo">
+    <strong>ICE</strong>
+    <span>cube</span>
+  </div>
+</div>
 <main class="app">
   <section class="page active" id="homePage">
     <header class="home-header">
@@ -303,6 +357,10 @@ earningInput.addEventListener("change",saveEarning);earningInput.addEventListene
 
 renderSaving();
 renderEarningTotal();
+const splashScreen=document.getElementById("splashScreen");
+window.addEventListener("load",()=>{
+  window.setTimeout(()=>splashScreen?.classList.add("is-hidden"),900);
+});
 </script>
 </body>
 </html>
