@@ -67,18 +67,12 @@ button{cursor:pointer}
 .saving-input,.coffee-input,.earning-input{color:#9b9b9b}
 .input-card input{width:45%;border:0;outline:0;background:transparent;color:var(--ink);font-size:21px;font-weight:300;font-family:"SF Hello","PingFang SC","Hiragino Sans GB",sans-serif;text-align:right}
 .input-card input::placeholder{color:rgba(41,39,67,.22)}
-.result-grid{display:grid;grid-template-columns:max-content max-content;justify-content:center;column-gap:22px;row-gap:17px;margin-top:22px;font-size:15px;line-height:1.35}
-.result-label{text-align:right;white-space:nowrap}
+.result-grid{display:grid;grid-template-columns:max-content 1fr;justify-content:start;width:100%;column-gap:22px;row-gap:17px;margin-top:22px;font-size:15px;line-height:1.35}
+.result-label{text-align:left;white-space:nowrap}
 .result-value{text-align:left;white-space:nowrap;font-weight:600}
 .result-grid,.empty-note,.helper-text{font-family:"SF Hello","PingFang SC","Hiragino Sans GB",sans-serif;font-weight:300}
 .result-value{font-weight:300}
-.earning-results{
-  width:100%;
-  grid-template-columns:1fr 1fr;
-  justify-content:stretch;
-  column-gap:22px;
-  margin-top:22px;
-}
+
 .single-result{margin-top:30px}
 .empty-note,.helper-text{margin-top:6px;text-align:center;color:rgba(41,39,67,.48);font-size:13px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:calc(100% - 48px);padding:10px 16px;border-radius:999px;background:rgba(41,39,67,.92);color:#fff;font-size:14px;white-space:nowrap;z-index:30}
@@ -164,7 +158,7 @@ button{cursor:pointer}
     </header>
     <section class="tool-content">
       <label class="input-card earning-input"><span>金额</span><input id="earningInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label>
-      <div class="result-grid earning-results">
+      <div class="result-grid">
         <div class="result-label">宇多收入共</div>
         <div class="result-value"><span id="earningTotal">0.00</span> USD</div>
         <div class="result-label">上一笔收入</div>
