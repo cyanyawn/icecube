@@ -84,61 +84,11 @@ button{cursor:pointer}
 .empty-note,.helper-text{margin-top:6px;text-align:center;color:rgba(41,39,67,.48);font-size:13px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:calc(100% - 48px);padding:10px 16px;border-radius:999px;background:rgba(41,39,67,.92);color:#fff;font-size:14px;white-space:nowrap;z-index:30}
 [hidden]{display:none!important}
-.splash-screen{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#fff;
-  opacity:1;
-  visibility:visible;
-  transition:opacity .45s ease,visibility .45s ease;
-}
-.splash-screen.is-hidden{
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-}
-.splash-logo{
-  width:86px;
-  height:86px;
-  border-radius:13px;
-  background:var(--logo);
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  font-family:"Helvetica Neue",Arial,sans-serif;
-  line-height:.86;
-}
-.splash-logo strong{
-  font-size:35px;
-  font-weight:700;
-  letter-spacing:-1px;
-}
-.splash-logo span{
-  margin-top:5px;
-  font-size:24px;
-  font-weight:200;
-  letter-spacing:-1px;
-}
-@media (prefers-reduced-motion:reduce){
-  .splash-screen{transition:none}
-}
 @media (max-height:700px){.divider{margin:32px 0 38px}.home-menu{gap:44px}.tool-page .divider{margin:30px 0 34px}}
 @media (max-width:350px){.app{padding-left:28px;padding-right:28px}.date-stack{font-size:50px}.logo{font-size:27px}.menu-name,.title-text{font-size:22px;letter-spacing:7px}.result-grid{column-gap:15px;font-size:14px}}
 </style>
 </head>
 <body>
-<div class="splash-screen" id="splashScreen" aria-hidden="true">
-  <div class="splash-logo">
-    <strong>ICE</strong>
-    <span>cube</span>
-  </div>
-</div>
 <main class="app">
   <section class="page active" id="homePage">
     <header class="home-header">
@@ -329,14 +279,120 @@ earningFile.addEventListener("change",async()=>{
 });
 
 const balanceInput=document.getElementById("balanceInput"),savingResults=document.getElementById("savingResults"),salaryNotice=document.getElementById("salaryNotice"),nextSalaryDate=document.getElementById("nextSalaryDate"),daysLeft=document.getElementById("daysLeft"),dailyBudget=document.getElementById("dailyBudget"),spentLabel=document.getElementById("spentLabel"),spentAmount=document.getElementById("spentAmount");
-function renderSaving(){const value=Number(balanceInput.value);if(balanceInput.value===""||!Number.isFinite(value)||value<0){savingResults.hidden=true;salaryNotice.hidden=true;return}const salaryDates=read(KEYS.salaryDates,[]);const today=new Date();const next=salaryDates.find(s=>{const d=parseDate(s);return d&&daysBetween(today,d)>=0});if(!next){savingResults.hidden=true;salaryNotice.hidden=false;return}salaryNotice.hidden=true;const nextDate=parseDate(next);const remaining=daysBetween(today,nextDate);nextSalaryDate.textContent=next;daysLeft.textContent=String(remaining);dailyBudget.textContent=remaining>0?money(value/remaining):"—";const previous=read(KEYS.saving,[]).filter(item=>item.date<todayString()).sort((a,b)=>b.date.localeCompare(a.date))[0];if(previous){const elapsed=daysBetween(parseDate(previous.date),today);spentLabel.textContent=`过去 ${elapsed} 天已花费`;spentAmount.textContent=money(Number(previous.balance)-value);spentLabel.hidden=false;spentAmount.hidden=false}else{spentLabel.hidden=true;spentAmount.hidden=true}savingResults.hidden=false}
-function saveSaving(){const value=Number(balanceInput.value);if(balanceInput.value===""||!Number.isFinite(value)||value<0)return;const today=todayString();const records=read(KEYS.saving,[]);const index=records.findIndex(item=>item.date===today);const record={date:today,balance:Number(value.toFixed(2))};if(index>=0)records[index]=record;else records.push(record);records.sort((a,b)=>a.date.localeCompare(b.date));write(KEYS.saving,records);renderSaving()}
-const todayRecord=read(KEYS.saving,[]).find(item=>item.date===todayString());if(todayRecord)balanceInput.value=todayRecord.balance;
-balanceInput.addEventListener("input",renderSaving);balanceInput.addEventListener("change",saveSaving);balanceInput.addEventListener("keydown",event=>{if(event.key==="Enter")balanceInput.blur()});
+
+function savingSortValue(item){
+  if(Number.isFinite(Number(item.savedAt))) return Number(item.savedAt);
+  const date=parseDate(item.date);
+  return date ? date.getTime() : 0;
+}
+
+function getSavingRecords(){
+  return read(KEYS.saving,[]).sort((a,b)=>savingSortValue(a)-savingSortValue(b));
+}
+
+function renderSaving(){
+  const value=Number(balanceInput.value);
+  if(balanceInput.value===""||!Number.isFinite(value)||value<0){
+    savingResults.hidden=true;
+    salaryNotice.hidden=true;
+    return;
+  }
+
+  const salaryDates=read(KEYS.salaryDates,[]);
+  const today=new Date();
+  const next=salaryDates.find(s=>{
+    const d=parseDate(s);
+    return d&&daysBetween(today,d)>=0;
+  });
+
+  if(!next){
+    savingResults.hidden=true;
+    salaryNotice.hidden=false;
+    return;
+  }
+
+  salaryNotice.hidden=true;
+  const nextDate=parseDate(next);
+  const remaining=daysBetween(today,nextDate);
+  nextSalaryDate.textContent=next;
+  daysLeft.textContent=String(remaining);
+  dailyBudget.textContent=remaining>0?money(value/remaining):"—";
+
+  const records=getSavingRecords();
+  const latest=records.at(-1);
+  const inputMatchesLatest=latest&&Number(latest.balance)===Number(value.toFixed(2));
+  const previous=inputMatchesLatest?records.at(-2):latest;
+
+  if(previous){
+    const elapsed=daysBetween(parseDate(previous.date),today);
+    spentLabel.textContent=`过去 ${elapsed} 天已花费`;
+    spentAmount.textContent=money(Number(previous.balance)-value);
+    spentLabel.hidden=false;
+    spentAmount.hidden=false;
+  }else{
+    spentLabel.hidden=true;
+    spentAmount.hidden=true;
+  }
+
+  savingResults.hidden=false;
+}
+
+function saveSaving(){
+  const value=Number(balanceInput.value);
+  if(balanceInput.value===""||!Number.isFinite(value)||value<0)return;
+
+  const records=getSavingRecords();
+  const latest=records.at(-1);
+  const rounded=Number(value.toFixed(2));
+
+  if(latest&&Number(latest.balance)===rounded&&latest.date===todayString()){
+    renderSaving();
+    return;
+  }
+
+  records.push({
+    id:crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`,
+    date:todayString(),
+    balance:rounded,
+    savedAt:Date.now()
+  });
+
+  write(KEYS.saving,records);
+  renderSaving();
+}
+
+const latestSavingRecord=getSavingRecords().at(-1);
+if(latestSavingRecord)balanceInput.value=latestSavingRecord.balance;
+
+balanceInput.addEventListener("input",renderSaving);
+balanceInput.addEventListener("change",saveSaving);
+balanceInput.addEventListener("keydown",event=>{if(event.key==="Enter")balanceInput.blur()});
 
 const remainingInput=document.getElementById("remainingInput"),dailyInput=document.getElementById("dailyInput"),coffeeResult=document.getElementById("coffeeResult"),daysCanDrink=document.getElementById("daysCanDrink");
-function calculateCoffee(){const remaining=Number(remainingInput.value),daily=Number(dailyInput.value);if(remainingInput.value===""||dailyInput.value===""||!Number.isFinite(remaining)||!Number.isFinite(daily)||remaining<0||daily<=0){coffeeResult.hidden=true;return}daysCanDrink.textContent=String(Math.round(remaining/daily));coffeeResult.hidden=false}
-remainingInput.addEventListener("input",calculateCoffee);dailyInput.addEventListener("input",calculateCoffee);
+
+const savedCoffee=read("icehub.coffee",{});
+if(savedCoffee.remaining!==undefined)remainingInput.value=savedCoffee.remaining;
+if(savedCoffee.daily!==undefined)dailyInput.value=savedCoffee.daily;
+
+function calculateCoffee(){
+  const remaining=Number(remainingInput.value),daily=Number(dailyInput.value);
+  if(remainingInput.value===""||dailyInput.value===""||!Number.isFinite(remaining)||!Number.isFinite(daily)||remaining<0||daily<=0){
+    coffeeResult.hidden=true;
+    return;
+  }
+
+  daysCanDrink.textContent=String(Math.round(remaining/daily));
+  coffeeResult.hidden=false;
+
+  write("icehub.coffee",{
+    remaining:Number(remaining.toFixed(2)),
+    daily:Number(daily.toFixed(2))
+  });
+}
+
+remainingInput.addEventListener("input",calculateCoffee);
+dailyInput.addEventListener("input",calculateCoffee);
+calculateCoffee();
 
 const earningInput=document.getElementById("earningInput"),earningTotal=document.getElementById("earningTotal");
 function renderEarningTotal(){
@@ -360,10 +416,6 @@ earningInput.addEventListener("change",saveEarning);earningInput.addEventListene
 
 renderSaving();
 renderEarningTotal();
-const splashScreen=document.getElementById("splashScreen");
-window.addEventListener("load",()=>{
-  window.setTimeout(()=>splashScreen?.classList.add("is-hidden"),900);
-});
 </script>
 </body>
 </html>
