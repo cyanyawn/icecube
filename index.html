@@ -58,9 +58,9 @@ button{cursor:pointer}
 .saving-text{color:var(--saving)}
 .coffee-text{color:var(--coffee)}
 .earning-text{color:var(--earning)}
-.data-menu,.submenu{position:absolute;top:48px;right:0;width:150px;padding:8px;border:1px solid rgba(41,39,67,.12);border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 12px 36px rgba(41,39,67,.14);backdrop-filter:blur(18px);z-index:10}
-.submenu{top:48px;right:158px;width:178px}
-.data-menu button,.submenu button{width:100%;border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:10px;color:var(--ink);font-family:"Baloo 2",cursive;font-size:17px}
+.data-menu,.submenu{position:absolute;top:48px;right:0;width:92px;padding:4px;border:1px solid rgba(41,39,67,.12);border-radius:16px;background:rgba(255,255,255,.96);box-shadow:0 12px 36px rgba(41,39,67,.14);backdrop-filter:blur(18px);z-index:10}
+.submenu{top:48px;right:100px;width:92px}
+.data-menu button,.submenu button{width:100%;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:12px 0;border-radius:10px;color:var(--ink);font-size:28px;line-height:1}
 .data-menu button:hover,.submenu button:hover{background:#f3f3f1}
 .tool-header{display:block}
 .tool-page .divider{margin:0 0 58px}
@@ -98,18 +98,20 @@ button{cursor:pointer}
       </div>
       <button class="top-dot neutral-dot" id="dataMenuButton" aria-label="Import or export data"></button>
       <div class="data-menu" id="dataMenu" hidden>
-        <button data-action="import">import</button>
-        <button data-action="export">export</button>
+        <button data-action="import">⬆️</button>
+        <button data-action="export">⬇️</button>
       </div>
       <div class="submenu" id="importMenu" hidden>
-        <button data-import="salary">salary dates</button>
-        <button data-import="earning">youtube earnings</button>
+        <button data-import="salary">📅</button>
+        <button data-import="saving">💵</button>
+        <button data-import="earning">📈</button>
       </div>
       <div class="submenu" id="exportMenu" hidden>
-        <button data-export="saving">saving</button>
-        <button data-export="earning">youtube earnings</button>
+        <button data-export="saving">💵</button>
+        <button data-export="earning">📈</button>
       </div>
       <input type="file" id="salaryFile" accept=".csv,text/csv" hidden>
+      <input type="file" id="savingFile" accept=".csv,text/csv" hidden>
       <input type="file" id="earningFile" accept=".csv,text/csv" hidden>
     </header>
     <div class="divider"></div>
@@ -236,8 +238,12 @@ document.getElementById("dataMenuButton").addEventListener("click",event=>{event
 dataMenu.addEventListener("click",event=>{const action=event.target.dataset.action;if(!action)return;importMenu.hidden=action!=="import";exportMenu.hidden=action!=="export"});
 document.addEventListener("click",event=>{if(!event.target.closest(".data-menu")&&!event.target.closest(".submenu")&&!event.target.closest("#dataMenuButton"))hideMenus()});
 
-const salaryFile=document.getElementById("salaryFile"),earningFile=document.getElementById("earningFile");
-importMenu.addEventListener("click",event=>{if(event.target.dataset.import==="salary")salaryFile.click();if(event.target.dataset.import==="earning")earningFile.click()});
+const salaryFile=document.getElementById("salaryFile"),savingFile=document.getElementById("savingFile"),earningFile=document.getElementById("earningFile");
+importMenu.addEventListener("click",event=>{
+  if(event.target.dataset.import==="salary")salaryFile.click();
+  if(event.target.dataset.import==="saving")savingFile.click();
+  if(event.target.dataset.import==="earning")earningFile.click();
+});
 exportMenu.addEventListener("click",event=>{const type=event.target.dataset.export;if(type==="saving"){const rows=read(KEYS.saving,[]).sort((a,b)=>a.date.localeCompare(b.date)).map(item=>[item.date,item.balance]);if(!rows.length)return showToast("还没有 Saving 数据");downloadCSV("Saving.csv",["Date","Balance"],rows)}if(type==="earning"){const rows=read(KEYS.earning,[]).sort((a,b)=>a.date.localeCompare(b.date)).map(item=>[item.date,`$${money(item.amount)}`]);if(!rows.length)return showToast("还没有 YouTube Earnings 数据");downloadCSV("YouTube Earnings.csv",["Date","Amount"],rows)}hideMenus()});
 salaryFile.addEventListener("change",async()=>{
   const file=salaryFile.files[0];
@@ -250,6 +256,36 @@ salaryFile.addEventListener("change",async()=>{
   write(KEYS.salaryDates,unique);
   showToast(`已导入 ${unique.length} 个工资日`);
   salaryFile.value="";
+  hideMenus();
+});
+
+// Saving CSV import
+savingFile.addEventListener("change",async()=>{
+  const file=savingFile.files[0];
+  if(!file)return;
+
+  const rows=parseCSV(await file.text());
+  const imported=[];
+
+  for(const row of rows.slice(1)){
+    const date=parseDate(row[0]);
+    const balance=Number(row[1]);
+    if(date&&Number.isFinite(balance)){
+      imported.push({
+        id:`${Date.now()}-${Math.random()}`,
+        date:formatDate(date),
+        balance:Number(balance.toFixed(2)),
+        savedAt:Date.now()+imported.length
+      });
+    }
+  }
+
+  if(!imported.length)return showToast("没有找到有效 Saving 数据");
+
+  write(KEYS.saving,[...getSavingRecords(),...imported]);
+  renderSaving();
+  showToast(`已导入 ${imported.length} 条 Saving 记录`);
+  savingFile.value="";
   hideMenus();
 });
 earningFile.addEventListener("change",async()=>{
